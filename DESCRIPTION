@@ -1,0 +1,15 @@
+Package: emcmc
+Type: Package
+Title: Extensible Markov Chain Monte Carlo
+Version: 0.1.0
+Author: Gregory Bopp
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: R6 Class based implementation of MCMC that takes advantage of user-defined factorized likelihoods to reduce computing redundancy.
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+Requires: dplyr,
+          purrr,
+          progress,
+          R6,
+          stringr
