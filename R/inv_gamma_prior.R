@@ -14,19 +14,19 @@ InvGamma$set('public',
              'initialize',
              function(shape,
                       rate,
-                      scale = 1/rate){
+                      scale = 1 / rate) {
                if (!missing(rate) && !missing(scale)) {
-                stop("specify 'rate' or 'scale' but not both")
+                 stop("specify 'rate' or 'scale' but not both")
                }
                if (!missing(shape))
                  self$shape = shape
-               if (!missing(scale)){
+               if (!missing(scale)) {
                  self$scale = scale
-                 self$rate = 1/scale
+                 self$rate = 1 / scale
                }
-               if(!missing(rate)){
-                 self$scale = 1/rate
-                 self$rate = 1/scale
+               if (!missing(rate)) {
+                 self$scale = 1 / rate
+                 self$rate = 1 / scale
                }
                invisible(self)
              })

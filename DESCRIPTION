@@ -9,6 +9,7 @@ License: GPL-2
 Encoding: UTF-8
 LazyData: true
 Requires: dplyr,
+          magrittr,
           purrr,
           progress,
           R6,
