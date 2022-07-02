@@ -22,12 +22,12 @@ InvGamma$set('public',
 InvGamma$set('public',
                'dprior',
  function(x){
-   if (x > 0) {
+   if (all(x > 0)) {
      ll <- dgamma(1 / x,
                   shape = self$ig_shape,
                   rate = self$ig_scale,
-                  log = T) -
-       2 * log(x) # Jacobian
+                  log = TRUE) -
+       2 * sum(log(x)) # Jacobian
    }
    else{
      ll <- -Inf
