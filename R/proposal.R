@@ -1,6 +1,7 @@
 Proposal <- R6::R6Class("Proposal",
             public = list(
-              block_info = NULL
+              block_info = NULL,
+              mcmc = NULL
             ),
             private = list(
               .acpt_rt = NA,
@@ -99,7 +100,8 @@ Proposal$set("public",
                       prop_var,
                       adapt_prop_var,
                       is_asymmetric,
-                      blocks){
+                      blocks,
+                      mcmc){
                # Should proposal variance be adaptively tuned
                if (!missing(adapt_prop_var))
                  private$.adapt_prop_var <- adapt_prop_var
@@ -114,6 +116,10 @@ Proposal$set("public",
                if (!missing(prop_var)) {
                 self$set_prop_var(prop_var)
                }
+               if (!missing(mcmc)){
+                 self$set_mcmc(mcmc)
+               }
+
 
                # Random Proposal Generation Function
                self$check_req_args(r_fn, "cur")
@@ -259,5 +265,11 @@ Proposal$set("public", "set_cur_block_info",
              }
 )
 
-
+Proposal$set("public",
+             "set_mcmc",
+             function(mcmc) {
+              self$mcmc <- mcmc
+              invisible(self)
+             }
+)
 

@@ -23,7 +23,6 @@ NormalRW$set('public',
                  private$.adapt_prop_var <- adapt_prop_var
                # Set blocks
                self$set_blocks(blocks)
-
               invisible(self)
              }
 )

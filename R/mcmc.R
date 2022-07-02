@@ -1,4 +1,5 @@
-MCMC <- R6::R6Class("MCMC",
+MCMC <- R6::R6Class(
+  "MCMC",
   public = list(
     n_mcmc = 1000,
     n_adapt = 500,
@@ -9,7 +10,6 @@ MCMC <- R6::R6Class("MCMC",
     cache_dir = NA,
     combine_cached = TRUE,
     init = NULL,
-    cur = NULL,
     cur_lik = NA,
     prop_lik = NA,
     prop = NULL,
@@ -19,33 +19,44 @@ MCMC <- R6::R6Class("MCMC",
     samples = NULL,
     acpt_rt = NULL,
     param_names = NULL,
-    log_lik = NULL,                    # LogLik Class Object
+    log_lik = NULL,
+    # LogLik Class Object
     priors = NULL,
     saved_file_paths = NULL,
     show_progress = TRUE,
     cur_mcmc_iter = 1,
     sample_row = 1,
-    adapt_prop_control = list(
-      c0 = 10,
-      c1 = 0.8,
-      tune_k = 3)
-    ),
-  private = list(.n_samples = NULL,
-                 .cache_flag = FALSE,
-                 .cache_ends = NA,
-                 .cache_starts = NA,
-                 .cache_part = NA,
-                 .n_mcmc_full = NA,
-                 .progress_bar = NULL,
-                 .tick_interval = NA),
+    adapt_prop_control = list(c0 = 10,
+                              c1 = 0.8,
+                              tune_k = 3)
+  ),
+  private = list(
+    .cur = NULL,
+    .n_samples = NULL,
+    .cache_flag = FALSE,
+    .cache_ends = NA,
+    .cache_starts = NA,
+    .cache_part = NA,
+    .n_mcmc_full = NA,
+    .progress_bar = NULL,
+    .tick_interval = NA
+  ),
   active = list(
-    # Read only field: n_samples
-    n_samples = function(value){
-      if(missing(value)){
+    # Read only fields
+    n_samples = function(value) {
+      if (missing(value)) {
         private$.n_samples
       }
       else{
         stop("$n_samples is read only", call. = F)
+      }
+    },
+    cur = function(value) {
+      if (missing(value)) {
+        private$.cur
+      }
+      else{
+        stop("$cur is read only", call. = F)
       }
     }
   )
@@ -99,21 +110,21 @@ MCMC$set("public", "initialize",
     # Check that init contains all params in param_names
     self$param_names <- names(init)
     self$init <- init
-    self$cur <- init
+    private$.cur <- init
     # Setup sample storage
-    if(!missing(n_mcmc)){
+    if (!missing(n_mcmc)) {
       self$n_mcmc <- n_mcmc
     }
-    if(!missing(n_adapt)){
+    if (!missing(n_adapt)) {
       self$n_adapt <- n_adapt
     }
-    if(!missing(n_burnin)){
+    if (!missing(n_burnin)) {
       self$n_burnin <- n_burnin
     }
-    if(!missing(thin_int)){
+    if (!missing(thin_int)) {
       self$thin_int <- thin_int
     }
-    if(!missing(show_progress)){
+    if (!missing(show_progress)) {
       self$show_progress <- show_progress
     }
 
@@ -122,22 +133,24 @@ MCMC$set("public", "initialize",
     private$.tick_interval <- round(private$.n_mcmc_full/50)
 
     # Set up caching (turn into method) ---------------------
-    if(!missing(cache_freq)){
-      cache_freq <- round(cache_freq)    # Ensure that cache_freq is an integer
+    if (!missing(cache_freq)) {
+      cache_freq <-
+        round(cache_freq)    # Ensure that cache_freq is an integer
       private$.cache_flag = TRUE
-      if(missing(cache_dir)){
+      if (missing(cache_dir)) {
         cache_dir <- file.path(tempdir(), 'emcmc')
         print("Specified 'cache_freq', but missing 'cache_dir'")
         cat(paste("Using temporary cache dir: ", cache_dir, sep = "\n"))
       }
       dir.create(cache_dir, recursive = T)
-      if(!missing(combine_cached)){
+      if (!missing(combine_cached)) {
         self$combine_cached <- combine_cached
       }
       self$cache_dir <- cache_dir
       self$cache_freq <- min(cache_freq, private$.n_mcmc_full)
-      cache_ends <- seq(cache_freq, private$.n_mcmc_full, by= cache_freq)
-      if(!(n_mcmc %in% cache_ends)){
+      cache_ends <-
+        seq(cache_freq, private$.n_mcmc_full, by = cache_freq)
+      if (!(n_mcmc %in% cache_ends)) {
         cache_ends <- c(cache_ends, private$.n_mcmc_full)
       }
       private$.cache_ends <- cache_ends
@@ -149,32 +162,33 @@ MCMC$set("public", "initialize",
     self$allocate_sample_storage()
 
     # Keep constants
-    if(!missing(const)){
+    if (!missing(const)) {
       self$const <- const
     }
 
-    self$prop <- self$cur
+    self$prop <- private$.cur
 
     # Set likelihood function
     self$log_lik <- log_lik
 
     # Add Normal random walk proposals for any parameters with missing proposals
-    if(missing(proposals))
+    if (missing(proposals))
       proposals <- list()
 
-    for(param_name in self$param_names){
-      if(!(param_name %in% names(proposals))){
+    for (param_name in self$param_names) {
+      if (!(param_name %in% names(proposals))) {
         proposals[[param_name]] <- NormalRW$new(prop_var = 0.001,
-                                                blocks = factor(1:length(self$cur[[param_name]])))
+                                                blocks = factor(1:length(private$.cur[[param_name]])))
       }
     }
     self$proposals <- proposals
+    # Add a reference to the containing MCMC class to each of the proposals
+    walk(self$proposals, ~{.x$set_mcmc(self)})
 
     # If proposals are generic (i.e. don't have defined blocks, assume single block)
-
-    for(param_name in self$param_names){
-      if(self$proposals[[param_name]]$ambiguous_blocks){
-        self$proposals[[param_name]]$set_blocks(factor(rep(1, length(self$cur[[param_name]]))))
+    for (param_name in self$param_names) {
+      if (self$proposals[[param_name]]$ambiguous_blocks) {
+        self$proposals[[param_name]]$set_blocks(factor(rep(1, length(private$.cur[[param_name]]))))
       }
     }
 
@@ -188,7 +202,7 @@ MCMC$set("public", "initialize",
     self$calc_gamma1()
 
     # Prepare likelihood object (evaluate at current value and cache)
-    self$log_lik$update_all_param(param = list_modify(self$cur, !!!self$const),
+    self$log_lik$update_all_param(param = list_modify(private$.cur, !!!self$const),
                                   data = self$data)
     self$log_lik$cache_param_cll(param_names = self$log_lik$param_names)
     self$cur_lik = self$log_lik$value
@@ -239,7 +253,7 @@ MCMC$set("public",
            value <-
              self$proposals[[param_name]]$r_fn(
                self = self$proposals[[param_name]],
-               cur = self$cur[[param_name]]
+               cur = private$.cur[[param_name]]
              )
            self$set_prop(param_name, value)
            invisible(self)
@@ -249,7 +263,7 @@ MCMC$set("public", "full_cond",
          function(param_name, type) {
            if (type == "cur") {
              lik <- self$cur_lik
-             param_value <- self$cur[[param_name]]
+             param_value <- private$.cur[[param_name]]
            }
            else{
              lik <- self$prop_lik
@@ -285,17 +299,17 @@ MCMC$set("public", "mh_step",
           prop_fc <- self$full_cond(param_name, "prop")
 
           # Calculate Hastings ratio if proposal is asymmetric
-          if(self$proposals[[param_name]]$is_asymmetric){
-            mh_num <- sum(
-                    self$proposals[[param_name]]$d_fn(self$proposals[[param_name]],
-                                                      prop = self$cur[[param_name]],
-                                                      cur = self$prop[[param_name]])
-            )
-            mh_denom <- sum(
-              self$proposals[[param_name]]$d_fn(self$proposals[[param_name]],
-                                                prop = self$prop[[param_name]],
-                                                cur = self$cur[[param_name]])
-            )
+          if (self$proposals[[param_name]]$is_asymmetric) {
+            mh_num <- sum(self$proposals[[param_name]]$d_fn(
+              self$proposals[[param_name]],
+              prop = private$.cur[[param_name]],
+              cur = self$prop[[param_name]]
+            ))
+            mh_denom <- sum(self$proposals[[param_name]]$d_fn(
+              self$proposals[[param_name]],
+              prop = self$prop[[param_name]],
+              cur = private$.cur[[param_name]]
+            ))
           }
           else{
             mh_num <- mh_denom <- 0
@@ -304,9 +318,9 @@ MCMC$set("public", "mh_step",
           ##
           ## Accept Case
           ##
-          if(log(runif(1)) < prop_fc + mh_num - cur_fc - mh_denom){
+          if (log(runif(1)) < prop_fc + mh_num - cur_fc - mh_denom) {
             # Retain sample
-            self$cur[[param_name]] <- self$prop[[param_name]]
+            private$.cur[[param_name]] <- self$prop[[param_name]]
             # Retain current log likelihood
             self$cur_lik <- self$prop_lik
             # Update acceptance indicator
@@ -317,7 +331,7 @@ MCMC$set("public", "mh_step",
           ##
           else{
             # Revert parameter
-            self$prop[[param_name]] <- self$cur[[param_name]]
+            self$prop[[param_name]] <- private$.cur[[param_name]]
             # Revert log-likelihood to cached state
             self$log_lik$revert_param_cll(param_name)
             # Update acceptance indicator
@@ -331,12 +345,10 @@ MCMC$set("public", "mh_step",
 
 
           # Update proposal variance
-          if(self$cur_mcmc_iter <= self$n_adapt){
-            if(self$proposals[[param_name]]$adapt_prop_var){
-              self$proposals[[param_name]]$tune_prop_var(
-                block_level,
-                self$adapt_prop_control$gamma1
-              )
+          if (self$cur_mcmc_iter <= self$n_adapt) {
+            if (self$proposals[[param_name]]$adapt_prop_var) {
+              self$proposals[[param_name]]$tune_prop_var(block_level,
+                                                         self$adapt_prop_control$gamma1)
             }
           }
           invisible(self)
@@ -347,7 +359,7 @@ MCMC$set("public", "mh_step",
 MCMC$set("public",
          "store_sample",
          function(param_name){
-          self$samples[[param_name]][self$sample_row,] <- c(self$cur[[param_name]])
+          self$samples[[param_name]][self$sample_row,] <- c(private$.cur[[param_name]])
           invisible(self)
          }
 )
@@ -375,7 +387,7 @@ MCMC$set("public",
              map(~ matrix(NA,
                           nrow = self$n_samples,
                           ncol = prod(dim(
-                            self$cur[[.x]] %>%
+                            private$.cur[[.x]] %>%
                               as.matrix
                           )))) %>%
              `names<-`(self$param_names)
@@ -404,7 +416,7 @@ MCMC$set("public",
                       matrix(NA,
                              nrow = n_new_samples,
                              ncol = prod(dim(
-                            self$cur[[.x]] %>%
+                            private$.cur[[.x]] %>%
                               as.matrix
                           ))))
               }
@@ -415,7 +427,7 @@ MCMC$set("public",
 
 MCMC$set("public", "run_mcmc",
          function() {
-           if(self$show_progress){
+           if (self$show_progress) {
              # Make progress bar
              private$.progress_bar <- progress::progress_bar$new(
               format = "[:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
@@ -460,7 +472,7 @@ MCMC$set("public", "run_mcmc",
                                               collapse = '_'
                                             ), '.rds')))
              }
-             if(private$.cache_flag&&self$combine_cached){
+             if (private$.cache_flag && self$combine_cached) {
                self$clear_cache()
                self$prepend_stored_samples(self$saved_file_paths)
              }
@@ -474,35 +486,36 @@ MCMC$set("public", "run_mcmc",
 
 MCMC$set("public", "run_mcmc_part",
          function(){
-           if(self$sample_row <= self$n_samples){
+           if (self$sample_row <= self$n_samples) {
              start_mcmc_iter <- self$cur_mcmc_iter
              ##
              ## Main MCMC Loop
              ##
-             for(cur_mcmc_iter in start_mcmc_iter:self$n_mcmc){
-              self$cur_mcmc_iter <- cur_mcmc_iter
-              if(self$show_progress && (cur_mcmc_iter%%private$.tick_interval==0)){
-                # Update progress bar
-                private$.progress_bar$tick(private$.tick_interval)
-             }
-              if(self$cur_mcmc_iter <= self$n_adapt){
-                # Update variance tuning parameters
-                self$calc_gamma1()
-              }
+             for (cur_mcmc_iter in start_mcmc_iter:self$n_mcmc) {
+               self$cur_mcmc_iter <- cur_mcmc_iter
+               if (self$show_progress &&
+                   (cur_mcmc_iter %% private$.tick_interval == 0)) {
+                 # Update progress bar
+                 private$.progress_bar$tick(private$.tick_interval)
+               }
+               if (self$cur_mcmc_iter <= self$n_adapt) {
+                 # Update variance tuning parameters
+                 self$calc_gamma1()
+               }
 
-              ## Iterate through parameters and do Metropolis Step
-              for(param_name in self$param_names){
-                for(block_level in self$proposals[[param_name]]$block_levels){
-                  self$mh_step(param_name = param_name, block_level = block_level)
-                }
-              }
+               ## Iterate through parameters and do Metropolis Step
+               for (param_name in self$param_names) {
+                 for (block_level in self$proposals[[param_name]]$block_levels) {
+                   self$mh_step(param_name = param_name, block_level = block_level)
+                 }
+               }
 
-              ## Store samples
-              if((self$cur_mcmc_iter > self$n_burnin) &
-                 (self$cur_mcmc_iter %% self$thin_int == 0)){
-                for(param_name in self$param_names){
-                  self$store_sample(param_name)
-                }
+               ## Store samples
+               if ((self$cur_mcmc_iter > self$n_burnin) &
+                   (self$cur_mcmc_iter %% self$thin_int == 0)) {
+                 for (param_name in self$param_names) {
+                   self$store_sample(param_name)
+                 }
                 self$sample_row <- self$sample_row + 1
               }
              }
@@ -532,7 +545,7 @@ MCMC$set("public",
          "write_to_file",
          function(file_path, ...){
            # Record archive saved file paths
-           if(is.null(self$saved_file_paths)){
+           if (is.null(self$saved_file_paths)) {
              self$saved_file_paths <- list(file_path)
            }
            else{
