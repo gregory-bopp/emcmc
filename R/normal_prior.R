@@ -4,7 +4,7 @@ Normal <- R6::R6Class("Normal",
                   list(name = "normal",
                        length = 1,
                        mean = 0,
-                       sd = 100
+                       sd = 1
                   )
 )
 
