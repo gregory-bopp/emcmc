@@ -202,7 +202,7 @@ MCMC$set("public", "initialize",
     self$calc_gamma1()
 
     # Prepare likelihood object (evaluate at current value and cache)
-    self$log_lik$update_all_param(param = list_modify(private$.cur, !!!self$const),
+    self$log_lik$set_all_param(param = list_modify(private$.cur, !!!self$const),
                                   data = self$data)
     self$log_lik$cache_param_cll(param_names = self$log_lik$param_names)
     self$cur_lik = self$log_lik$value
@@ -238,7 +238,7 @@ MCMC$set("public", "set_prop",
 
 MCMC$set("public", "eval_prop_log_lik",
          function(param_names) {
-           self$log_lik$update_param(
+           self$log_lik$set_param(
              param_names = param_names,
              param = list_modify(self$prop,!!!self$const),
              data = self$data
@@ -280,9 +280,7 @@ MCMC$set("public", "full_cond",
          })
 
 
-##
-## TODO: add block to parameters
-##
+
 MCMC$set("public", "mh_step",
          function(param_name, block_level){
           # Update proposal block_info (i.e. r_fn and d_fn needs index)
@@ -333,7 +331,7 @@ MCMC$set("public", "mh_step",
             # Revert parameter
             self$prop[[param_name]] <- private$.cur[[param_name]]
             # Revert log-likelihood to cached state
-            self$log_lik$revert_param_cll(param_name)
+            self$log_lik$revert_param(param_name)
             # Update acceptance indicator
             acpt_ind <- 0
           }

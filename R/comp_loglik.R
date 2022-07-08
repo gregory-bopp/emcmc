@@ -8,16 +8,16 @@ CompLogLik <- R6::R6Class("CompLogLik",
   private = list(.value = NA,
                  .prev_value = NA),
   active = list(
-    value = function(x){
-      if(missing(x)){
+    value = function(x) {
+      if (missing(x)) {
         private$.value
       }
       else{
         stop("$value is read only", call. = F)
       }
     },
-    prev_value = function(x){
-      if(missing(x)){
+    prev_value = function(x) {
+      if (missing(x)) {
         private$.prev_value
       }
       else{
@@ -37,7 +37,7 @@ CompLogLik$set("public",
 )
 
 CompLogLik$set("public",
-               "update_param",
+               "set_param",
                function(param, data){
                 private$.value = self$fn(param = param,
                                          data = data)
