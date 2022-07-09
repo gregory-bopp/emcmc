@@ -247,15 +247,26 @@ MCMC$set("public", "eval_prop_log_lik",
            invisible(self)
          })
 
+
 MCMC$set("public",
          "make_proposal",
          function(param_name, block_level) {
-           value <-
-             self$proposals[[param_name]]$r_fn(
-               self = self$proposals[[param_name]],
-               cur = private$.cur[[param_name]]
-             )
+           update_type <- self$proposals[[param_name]]$update_type
+           if (update_type == "mh") {
+             value <-
+               self$proposals[[param_name]]$r_fn(self = self$proposals[[param_name]],
+                                                 cur = private$.cur[[param_name]])
+
+           }
+           else if (update_type == "gibbs") {
+             value <-
+               self$proposals[[param_name]]$r_fn(self = self$proposals[[param_name]])
+           }
+           else{
+             stop("Proposal 'update_type' must be one of 'mh' or 'gibbs'")
+           }
            self$set_prop(param_name, value)
+
            invisible(self)
          })
 
@@ -279,12 +290,49 @@ MCMC$set("public", "full_cond",
            invisible(lik + prior)
          })
 
+MCMC$set("public", "update_param",
+         function(param_name, block_level) {
+           # Update proposal block_info (i.e. r_fn and d_fn needs index)
+           self$proposals[[param_name]]$set_cur_block_info(block_level)
+           update_type <-
+             stringr::str_to_lower(self$proposals[[param_name]]$update_type)
+           if (update_type == "mh") {
+             # Do Metropolis-Hastings Update
+             self$mh_update(param_name, block_level)
+           }
+           if (update_type == "gibbs") {
+             # Do Metropolis-Hastings Update
+             self$gibbs_update(param_name, block_level)
+           }
 
+           invisible(self)
+         })
 
-MCMC$set("public", "mh_step",
+MCMC$set("public", "gibbs_update",
          function(param_name, block_level){
-          # Update proposal block_info (i.e. r_fn and d_fn needs index)
-          self$proposals[[param_name]]$set_cur_block_info(block_level)
+           # Make a Gibbs proposal
+           self$make_proposal(param_name, block_level = block_level)
+           # Retain sample
+           private$.cur[[param_name]] <- self$prop[[param_name]]
+
+           # Mark corresponding log-likelihood terms as having stale cache
+           self$log_lik$mark_stale_cll(
+             param_names = param_name
+           )
+
+           invisible(self)
+         })
+
+
+
+
+MCMC$set("public", "mh_update",
+         function(param_name, block_level){
+          # If component log-likelihood terms are stale, recalculate likelihood
+          self$log_lik$update_stale_cll(param_names = param_name,
+                                          param = list_modify(private$.cur, !!!self$const),
+                                          data = self$data)
+
           # Record current full conditional
           cur_fc <- self$full_cond(param_name, "cur")
           # Cache current value of log-lik in prev_value spot
@@ -501,10 +549,12 @@ MCMC$set("public", "run_mcmc_part",
                  self$calc_gamma1()
                }
 
-               ## Iterate through parameters and do Metropolis Step
+               ## Iterate through parameters and update each parameter and block
+               ## i.e. one mcmc iteration
                for (param_name in self$param_names) {
                  for (block_level in self$proposals[[param_name]]$block_levels) {
-                   self$mh_step(param_name = param_name, block_level = block_level)
+                   self$update_param(param_name = param_name,
+                                     block_level = block_level)
                  }
                }
 

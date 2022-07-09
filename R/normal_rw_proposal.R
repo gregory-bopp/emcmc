@@ -15,17 +15,16 @@ NormalRW$set('public',
              'initialize',
              function(prop_var,
                       adapt_prop_var,
-                      blocks){
+                      blocks) {
                # Proposal variance
-               if(!missing(prop_var))
+               if (!missing(prop_var))
                  private$.prop_var <- prop_var
-               if(!missing(adapt_prop_var))
+               if (!missing(adapt_prop_var))
                  private$.adapt_prop_var <- adapt_prop_var
                # Set blocks
                self$set_blocks(blocks)
-              invisible(self)
-             }
-)
+               invisible(self)
+             })
 
 NormalRW$set('public',
              'r_fn',

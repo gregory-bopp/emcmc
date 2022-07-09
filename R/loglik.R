@@ -106,3 +106,36 @@ LogLik$set("public",
            function() {
              return(self$value)
            })
+
+
+LogLik$set("public",
+           "mark_stale_cll",
+           function(param_names){
+             cll_update_idx <- self$cll_lookup[param_names] %>%
+               unlist %>%
+               unique
+             map(cll_update_idx, ~ {
+               self$cll_list[[.x]]$mark_stale()
+             })
+           }
+           )
+
+
+LogLik$set("public",
+           "update_stale_cll",
+           function(param_names, param, data){
+             cll_update_idx <- self$cll_lookup[param_names] %>%
+               unlist %>%
+               unique
+             map(cll_update_idx, ~ {
+               # If stale, recalculate with passed values
+               if(self$cll_list[[.x]]$stale){
+                 self$cll_list[[.x]]$set_param(param = param,
+                                               data = data)
+                 self$cll_list[[.x]]$cache_value()
+               }
+             })
+             self$recompute_total()
+             invisible(self)
+           }
+           )

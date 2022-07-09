@@ -6,7 +6,8 @@ CompLogLik <- R6::R6Class("CompLogLik",
                         #
             ),
   private = list(.value = NA,
-                 .prev_value = NA),
+                 .prev_value = NA,
+                 .stale = TRUE),
   active = list(
     value = function(x) {
       if (missing(x)) {
@@ -23,6 +24,14 @@ CompLogLik <- R6::R6Class("CompLogLik",
       else{
         stop("$prev_value is read only", call. = F)
       }
+    },
+    stale = function(x) {
+      if (missing(x)) {
+        private$.stale
+      }
+      else{
+        stop("$stale is read only", call. = F)
+      }
     }
   )
 )
@@ -37,10 +46,19 @@ CompLogLik$set("public",
 )
 
 CompLogLik$set("public",
+               "mark_stale",
+               function() {
+                 private$.stale = TRUE
+               }
+)
+
+
+CompLogLik$set("public",
                "set_param",
                function(param, data){
                 private$.value = self$fn(param = param,
                                          data = data)
+                private$.stale = FALSE
                 invisible(self)
                }
 )
