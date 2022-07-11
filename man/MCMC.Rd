@@ -17,9 +17,6 @@ Create an MCMC Sampler Object
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-MCMC-plot_post_histogram}{\code{MCMC$plot_post_histogram()}}
-\item \href{#method-MCMC-plot_post_trace}{\code{MCMC$plot_post_trace()}}
-\item \href{#method-MCMC-post_summary}{\code{MCMC$post_summary()}}
 \item \href{#method-MCMC-new}{\code{MCMC$new()}}
 \item \href{#method-MCMC-calc_gamma1}{\code{MCMC$calc_gamma1()}}
 \item \href{#method-MCMC-set_prop}{\code{MCMC$set_prop()}}
@@ -40,35 +37,11 @@ Create an MCMC Sampler Object
 \item \href{#method-MCMC-write_to_file}{\code{MCMC$write_to_file()}}
 \item \href{#method-MCMC-prepend_samples}{\code{MCMC$prepend_samples()}}
 \item \href{#method-MCMC-prepend_stored_samples}{\code{MCMC$prepend_stored_samples()}}
+\item \href{#method-MCMC-post_summary}{\code{MCMC$post_summary()}}
+\item \href{#method-MCMC-plot_post_histogram}{\code{MCMC$plot_post_histogram()}}
+\item \href{#method-MCMC-plot_post_trace}{\code{MCMC$plot_post_trace()}}
 \item \href{#method-MCMC-clone}{\code{MCMC$clone()}}
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MCMC-plot_post_histogram"></a>}}
-\if{latex}{\out{\hypertarget{method-MCMC-plot_post_histogram}{}}}
-\subsection{Method \code{plot_post_histogram()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MCMC$plot_post_histogram()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MCMC-plot_post_trace"></a>}}
-\if{latex}{\out{\hypertarget{method-MCMC-plot_post_trace}{}}}
-\subsection{Method \code{plot_post_trace()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MCMC$plot_post_trace()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MCMC-post_summary"></a>}}
-\if{latex}{\out{\hypertarget{method-MCMC-post_summary}{}}}
-\subsection{Method \code{post_summary()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MCMC$post_summary(probs = c(0.025, 0.975))}\if{html}{\out{</div>}}
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MCMC-new"></a>}}
@@ -420,6 +393,47 @@ Prepend Stored Samples
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MCMC-post_summary"></a>}}
+\if{latex}{\out{\hypertarget{method-MCMC-post_summary}{}}}
+\subsection{Method \code{post_summary()}}{
+Summarize Posterior Samples
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MCMC$post_summary(probs = c(0.025, 0.975))}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{probs}}{(vector of Real numbers between [0,1])}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+(named list of tibbles) for each parameter summarizing posterior
+samples.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MCMC-plot_post_histogram"></a>}}
+\if{latex}{\out{\hypertarget{method-MCMC-plot_post_histogram}{}}}
+\subsection{Method \code{plot_post_histogram()}}{
+Plot Posterior Histograms
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MCMC$plot_post_histogram()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MCMC-plot_post_trace"></a>}}
+\if{latex}{\out{\hypertarget{method-MCMC-plot_post_trace}{}}}
+\subsection{Method \code{plot_post_trace()}}{
+Plot Posterior Traceplots
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MCMC$plot_post_trace()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MCMC-clone"></a>}}

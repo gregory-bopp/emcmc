@@ -3,6 +3,22 @@ Proposal <- R6::R6Class(
   public = list(
     block_info = NULL,
     mcmc = NULL,
+    ##########################################################################
+    ## Public Methods
+    ##########################################################################
+    #' @description
+    #' Create new `Proposal` class object
+    #'
+    #' @param r_fn
+    #' @param d_fn
+    #' @param prop_var
+    #' @param adapt_prop_var
+    #' @param is_asymmetric
+    #' @param blocks
+    #' @param mcmc
+    #' @param update_type
+    #'
+    #' @return
     initialize = function(r_fn,
                           d_fn,
                           prop_var,
@@ -52,6 +68,12 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description
+    #' Set Block Definitions
+    #'
+    #' @param blocks
+    #'
+    #' @return
     set_blocks = function(blocks) {
       private$.blocks <- blocks
       private$.block_levels <-
@@ -70,6 +92,12 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description
+    #' Set Proposal Variance
+    #'
+    #' @param prop_var
+    #'
+    #' @return
     set_prop_var = function(prop_var) {
       # If a prop_var is passed, try to set
       if (!missing(prop_var)) {
@@ -105,6 +133,10 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description
+    #' Initialize Acceptance Rate
+    #'
+    #' @return
     init_acpt_rt = function() {
       # Initialize acpt_rt list
       private$.acpt_rt <-
@@ -114,6 +146,13 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description
+    #' Check Required Arguments
+    #'
+    #' @param fn
+    #' @param req_args
+    #'
+    #' @return
     check_req_args =  function(fn, req_args) {
       if (!missing(fn)) {
         f_args <- formalArgs(fn)
@@ -129,14 +168,33 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+
+    #' @description
+    #' Proposal Sampling Function
+    #' @param ...
+    #'
+    #' @return
     r_fn = function(...) {
       return(private$.r_fn(...))
     },
 
+    #' @description
+    #' Proposal Log-density Function
+    #'
+    #' @param ...
+    #'
+    #' @return
     d_fn = function(...) {
       return(private$.d_fn(...))
     },
 
+    #' @description
+    #' Tune Proposal Variance
+    #'
+    #' @param block_level
+    #' @param gamma1
+    #'
+    #' @return
     tune_prop_var = function(block_level, gamma1) {
       private$.prop_var[[block_level]] <-
         exp(log(private$.prop_var[[block_level]]) +
@@ -144,6 +202,14 @@ Proposal <- R6::R6Class(
                           private$.opt_rt))
       invisible(self)
     },
+
+    #' @description
+    #' Calculate Acceptance Rate
+    #' @param cur_mcmc_iter
+    #' @param acpt_ind
+    #' @param block_level
+    #'
+    #' @return
     calc_acpt_rt = function(cur_mcmc_iter, acpt_ind, block_level) {
       private$.acpt_rt[[block_level]] <-
         (private$.acpt_rt[[block_level]] * (cur_mcmc_iter - 1) + acpt_ind) /
@@ -151,6 +217,11 @@ Proposal <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description
+    #' Set Current Block Info
+    #' @param block_level
+    #'
+    #' @return
     set_cur_block_info = function(block_level) {
       self$block_info$level <- block_level
       self$block_info$index <-
@@ -167,6 +238,9 @@ Proposal <- R6::R6Class(
 
 
   ),
+  ##########################################################################
+  ## Private Attributes
+  ##########################################################################
   private = list(
     .acpt_rt = NA,
     .adapt_prop_var = FALSE,
@@ -181,6 +255,9 @@ Proposal <- R6::R6Class(
     .r_fn = NULL,
     .update_type = "mh"
   ),
+  ##########################################################################
+  ## Active Fields
+  ##########################################################################
   active = list(
     # Read only field
     acpt_rt = function(value) {
