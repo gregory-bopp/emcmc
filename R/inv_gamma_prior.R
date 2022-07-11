@@ -34,7 +34,7 @@ InvGamma <- R6::R6Class(
         }
         if (!missing(rate)) {
           self$scale = 1 / rate
-          self$rate = 1 / scale
+          self$rate = rate
         }
         invisible(self)
       }
