@@ -670,6 +670,23 @@ MCMC <- R6::R6Class(
     },
 
     #' @description
+    #'
+    #' @return (list) of transposed samples. `\code{$samples}` contains a named
+    #' list of matrices where the names correspond to sampled parameters, and
+    #' each row of the matrices corresponds to a single mcmc iteration. This
+    #' function 'transposes' this nesting structure, returning a nested list.
+    #' Each element of the outer list corresponds now to a single mcmc iteration,
+    #' and the inner list gives the samples for each parameter for that iteration.
+    #' @export
+    t_samples = function() {
+      return(purrr::map(self$samples,
+                        ~ .x %>%
+                          array_branch(1)) %>%
+               purrr::transpose())
+    },
+
+
+    #' @description
     #' Summarize Posterior Samples
     #'
     #' @param probs (vector of Real numbers between [0,1])

@@ -37,6 +37,7 @@ Create an MCMC Sampler Object
 \item \href{#method-MCMC-write_to_file}{\code{MCMC$write_to_file()}}
 \item \href{#method-MCMC-prepend_samples}{\code{MCMC$prepend_samples()}}
 \item \href{#method-MCMC-prepend_stored_samples}{\code{MCMC$prepend_stored_samples()}}
+\item \href{#method-MCMC-t_samples}{\code{MCMC$t_samples()}}
 \item \href{#method-MCMC-post_summary}{\code{MCMC$post_summary()}}
 \item \href{#method-MCMC-plot_post_histogram}{\code{MCMC$plot_post_histogram()}}
 \item \href{#method-MCMC-plot_post_trace}{\code{MCMC$plot_post_trace()}}
@@ -392,6 +393,23 @@ Prepend Stored Samples
 \item{\code{file_paths}}{}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MCMC-t_samples"></a>}}
+\if{latex}{\out{\hypertarget{method-MCMC-t_samples}{}}}
+\subsection{Method \code{t_samples()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MCMC$t_samples()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+(list) of transposed samples. `\code{$samples}` contains a named
+list of matrices where the names correspond to sampled parameters, and
+each row of the matrices corresponds to a single mcmc iteration. This
+function 'transposes' this nesting structure, returning a nested list.
+Each element of the outer list corresponds now to a single mcmc iteration,
+and the inner list gives the samples for each parameter for that iteration.
 }
 }
 \if{html}{\out{<hr>}}
