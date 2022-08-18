@@ -173,7 +173,7 @@ MCMC <- R6::R6Class(
       self$data <- data
 
       # Set Parameter Class Objects (contains e.g. prior functions)
-      self$priors <- priors
+      self$set_priors(priors)
 
       # Adaptive tuning constant
       self$calc_gamma1()
@@ -194,6 +194,25 @@ MCMC <- R6::R6Class(
       self$adapt_prop_control$gamma1 =
         self$adapt_prop_control$c0 / (self$cur_mcmc_iter +
                                         self$adapt_prop_control$tune_k) ^ self$adapt_prop_control$c1
+      invisible(self)
+    },
+
+    #' @description
+    #' Set Priors
+    set_priors = function(priors) {
+      # Must be called after self$param_names are defined
+      if (missing(priors))
+        priors <- list()
+     # If no prior is passed (e.g. in middle layers of hierarchical model),
+     # then define a null prior for that parameter
+      for (param_name in self$param_names) {
+        if (!(param_name %in% names(priors))) {
+          priors[[param_name]] <- NullPrior$new()
+        }
+      }
+
+      self$priors <- priors
+
       invisible(self)
     },
 
